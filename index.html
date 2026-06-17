@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SiriusOS</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      color: #e0e8ff;
+      user-select: none;
+    }
+
+    /* ── Star canvas background ── */
+    #starCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* ── Login Screen ── */
+    #loginScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, #0d1b3e 0%, #000 70%);
+      transition: opacity 0.8s ease;
+    }
+    #loginScreen.fade-out { opacity: 0; pointer-events: none; }
+
+    .login-avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e90ff, #7b2fff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin-bottom: 18px;
+      box-shadow: 0 0 30px rgba(30, 144, 255, 0.5);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 30px rgba(30,144,255,0.5); }
+      50% { box-shadow: 0 0 50px rgba(30,144,255,0.9); }
+    }
+    .login-name {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+      color: #c8d8ff;
+    }
+    .login-sub {
+      font-size: 13px;
+      color: #5577aa;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+    }
+    #enterBtn {
+      padding: 10px 36px;
+      border: 1px solid #1e90ff;
+      border-radius: 50px;
+      background: rgba(30,144,255,0.15);
+      color: #80c4ff;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 2px;
+      transition: all 0.3s;
+    }
+    #enterBtn:hover {
+      background: rgba(30,144,255,0.35);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(30,144,255,0.4);
+    }
+    .login-time {
+      position: absolute;
+      top: 40px;
+      font-size: 56px;
+      font-weight: 200;
+      letter-spacing: 4px;
+      color: rgba(200,216,255,0.8);
+    }
+    .login-date {
+      position: absolute;
+      top: 110px;
+      font-size: 14px;
+      color: #4466aa;
+      letter-spacing: 3px;
+    }
+
+    /* ── Desktop ── */
+    #desktop {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      display: none;
+    }
+
+    /* ── Desktop icons ── */
+    .desktop-icons {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .desk-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+      width: 72px;
+      padding: 8px 4px;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .desk-icon:hover { background: rgba(255,255,255,0.08); }
+    .desk-icon .icon-img { font-size: 32px; }
+    .desk-icon .icon-label {
+      font-size: 11px;
+      color: #c8d8ff;
+      text-align: center;
+      text-shadow: 0 1px 4px #000;
+    }
+
+    /* ── Context Menu ── */
+    #ctxMenu {
+      position: fixed;
+      z-index: 900;
+      background: rgba(10, 16, 40, 0.95);
+      border: 1px solid #1e3060;
+      border-radius: 8px;
+      padding: 4px 0;
+      min-width: 160px;
+      display: none;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    }
+    .ctx-item {
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      color: #c8d8ff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ctx-item:hover { background: rgba(30,144,255,0.2); color: #fff; }
+    .ctx-sep { height: 1px; background: #1e3060; margin: 4px 0; }
+
+    /* ── Taskbar ── */
+    #taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 48px;
+      background: rgba(5, 10, 28, 0.88);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid #1a2550;
+      z-index: 800;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 4px;
+    }
+    .tb-logo {
+      font-size: 18px;
+      color: #4ea8ff;
+      padding: 0 12px 0 4px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      border-right: 1px solid #1a2550;
+      margin-right: 4px;
+    }
+    .tb-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #8899cc;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { background: rgba(30,144,255,0.15); color: #c8d8ff; }
+    .tb-btn.active {
+      background: rgba(30,144,255,0.25);
+      color: #fff;
+      border-color: rgba(30,144,255,0.4);
+    }
+    .tb-btn.minimized { opacity: 0.6; }
+    .tb-spacer { flex: 1; }
+    #tbClock {
+      font-size: 13px;
+      color: #8899cc;
+      padding: 0 12px;
+      text-align: right;
+      min-width: 80px;
+    }
+
+    /* ── Windows ── */
+    .win {
+      position: absolute;
+      min-width: 280px;
+      min-height: 200px;
+      background: rgba(8, 14, 36, 0.92);
+      border: 1px solid #1e3570;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(30,144,255,0.1);
+      backdrop-filter: blur(20px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+    .win:focus-within, .win.focused {
+      border-color: #2a5aaa;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(30,144,255,0.25);
+    }
+
+    /* Window titlebar */
+    .win-bar {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(14, 22, 54, 0.9);
+      border-bottom: 1px solid #1e3060;
+      cursor: grab;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .win-bar:active { cursor: grabbing; }
+    .win-controls { display: flex; gap: 6px; margin-right: 4px; }
+    .win-btn {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s;
+      position: relative;
+    }
+    .win-btn:hover { opacity: 0.8; }
+    .win-close { background: #ff5f57; }
+    .win-min   { background: #ffbd2e; }
+    .win-max   { background: #28c840; }
+    .win-title {
+      font-size: 13px;
+      color: #8899cc;
+      font-weight: 500;
+      flex: 1;
+    }
+    .win-icon { font-size: 14px; }
+
+    /* Window body */
+    .win-body {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+    }
+    .win-body::-webkit-scrollbar { width: 6px; }
+    .win-body::-webkit-scrollbar-track { background: transparent; }
+    .win-body::-webkit-scrollbar-thumb { background: #1e3060; border-radius: 3px; }
+
+    /* ── App: About ── */
+    .about-wrap {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .about-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e90ff, #7b2fff);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 0 24px rgba(30,144,255,0.4);
+    }
+    .about-name { font-size: 20px; font-weight: 600; color: #c8d8ff; }
+    .about-bio { font-size: 13px; color: #6677aa; text-align: center; line-height: 1.6; max-width: 280px; }
+    .about-links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .about-link {
+      padding: 5px 14px;
+      border-radius: 50px;
+      border: 1px solid #1e3570;
+      font-size: 12px;
+      color: #6699dd;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .about-link:hover { background: rgba(30,144,255,0.2); color: #aaddff; }
+    .about-stat {
+      display: flex; gap: 20px; margin-top: 4px;
+    }
+    .stat-box { text-align: center; }
+    .stat-num { font-size: 22px; font-weight: 700; color: #4ea8ff; }
+    .stat-lbl { font-size: 11px; color: #445577; }
+
+    /* ── App: Terminal ── */
+    .term-wrap {
+      padding: 14px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #44ff88;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .term-output { flex: 1; overflow-y: auto; }
+    .term-output p { line-height: 1.6; word-break: break-all; }
+    .term-output .err { color: #ff6666; }
+    .term-output .info { color: #66aaff; }
+    .term-input-row {
+      display: flex;
+      align-items: center;
+      border-top: 1px solid #1e3060;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+    .term-prompt { color: #1e90ff; margin-right: 6px; white-space: nowrap; }
+    .term-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      color: #44ff88;
+      font-family: inherit;
+      font-size: 13px;
+      caret-color: #44ff88;
+    }
+
+    /* ── App: Stargazer ── */
+    #stargazer-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+    .constellation-info {
+      position: absolute;
+      bottom: 10px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 12px;
+      color: #6688bb;
+      pointer-events: none;
+    }
+
+    /* ── App: Notes ── */
+    .notes-wrap { display: flex; height: 100%; }
+    .notes-sidebar {
+      width: 140px;
+      border-right: 1px solid #1e3060;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .notes-new-btn {
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px dashed #2a4080;
+      background: none;
+      color: #4477aa;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .notes-new-btn:hover { background: rgba(30,144,255,0.1); color: #88aadd; }
+    .note-item {
+      padding: 7px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #7788aa;
+      border: 1px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .note-item:hover { background: rgba(30,144,255,0.1); color: #c8d8ff; }
+    .note-item.active { background: rgba(30,144,255,0.2); color: #c8d8ff; border-color: rgba(30,144,255,0.3); }
+    .notes-editor {
+      flex: 1;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .note-title-input {
+      background: none;
+      border: none;
+      border-bottom: 1px solid #1e3060;
+      color: #c8d8ff;
+      font-size: 16px;
+      font-weight: 600;
+      outline: none;
+      padding-bottom: 6px;
+      font-family: inherit;
+    }
+    .note-body-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: #8899bb;
+      font-size: 13px;
+      outline: none;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.7;
+    }
+
+    /* ── App: Calculator ── */
+    .calc-wrap {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .calc-display {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #1e3060;
+      border-radius: 8px;
+      padding: 12px 16px;
+      text-align: right;
+    }
+    .calc-expr { font-size: 12px; color: #445577; min-height: 16px; }
+    .calc-val { font-size: 28px; font-weight: 300; color: #c8e0ff; }
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .calc-btn {
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #1e3060;
+      background: rgba(14,22,54,0.8);
+      color: #c8d8ff;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .calc-btn:hover { background: rgba(30,90,200,0.3); border-color: #2a5aaa; }
+    .calc-btn.op { color: #4ea8ff; }
+    .calc-btn.eq { background: rgba(30,144,255,0.25); border-color: #2a6acc; color: #80c4ff; }
+    .calc-btn.eq:hover { background: rgba(30,144,255,0.4); }
+    .calc-btn.wide { grid-column: span 2; }
+
+    /* Notification toast */
+    #toasts {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 950;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 10px 16px;
+      background: rgba(10,16,40,0.96);
+      border: 1px solid #1e3060;
+      border-left: 3px solid #1e90ff;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #c8d8ff;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Star canvas -->
+<canvas id="starCanvas"></canvas>
+
+<!-- Login Screen -->
+<div id="loginScreen">
+  <div class="login-time" id="loginClock">00:00</div>
+  <div class="login-date" id="loginDate"></div>
+  <div class="login-avatar">⭐</div>
+  <div class="login-name">SIRIUS</div>
+  <div class="login-sub">PERSONAL OPERATING SYSTEM</div>
+  <button id="enterBtn">ENTER</button>
+</div>
+
+<!-- Desktop -->
+<div id="desktop">
+
+  <!-- Desktop icons -->
+  <div class="desktop-icons">
+    <div class="desk-icon" onclick="openApp('about')">
+      <span class="icon-img">👤</span>
+      <span class="icon-label">About</span>
+    </div>
+    <div class="desk-icon" onclick="openApp('terminal')">
+      <span class="icon-img">💻</span>
+      <span class="icon-label">Terminal</span>
+    </div>
+    <div class="desk-icon" onclick="openApp('stargazer')">
+      <span class="icon-img">🔭</span>
+      <span class="icon-label">Stargazer</span>
+    </div>
+    <div class="desk-icon" onclick="openApp('notes')">
+      <span class="icon-img">📝</span>
+      <span class="icon-label">Notes</span>
+    </div>
+    <div class="desk-icon" onclick="openApp('calc')">
+      <span class="icon-img">🔢</span>
+      <span class="icon-label">Calc</span>
+    </div>
+  </div>
+
+  <!-- Right-click context menu -->
+  <div id="ctxMenu">
+    <div class="ctx-item" onclick="shuffleStars(); closeCtx()">✨ New Wallpaper</div>
+    <div class="ctx-item" onclick="openApp('notes'); closeCtx()">📝 New Note</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="showToast('SiriusOS v1.0'); closeCtx()">ℹ️ About SiriusOS</div>
+  </div>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <div class="tb-logo" onclick="openApp('about')">⭐ Sirius</div>
+    <div id="tbApps"></div>
+    <div class="tb-spacer"></div>
+    <div id="tbClock">00:00</div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toasts"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STARS BACKGROUND
+// ═══════════════════════════════════════════
+const canvas = document.getElementById('starCanvas');
+const ctx2 = canvas.getContext('2d');
+let stars = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  generateStars();
+}
+
+function generateStars() {
+  stars = [];
+  const count = Math.floor((canvas.width * canvas.height) / 4000);
+  for (let i = 0; i < count; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.2,
+      alpha: Math.random() * 0.8 + 0.2,
+      speed: Math.random() * 0.4 + 0.05,
+      drift: (Math.random() - 0.5) * 0.02,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function shuffleStars() {
+  // Change color theme randomly
+  shuffleStars.hue = ((shuffleStars.hue || 220) + 40) % 360;
+  generateStars();
+  showToast('Wallpaper changed!');
+}
+
+function drawStars(t) {
+  ctx2.clearRect(0, 0, canvas.width, canvas.height);
+  const hue = shuffleStars.hue || 220;
+  ctx2.fillStyle = `hsl(${hue}, 60%, 3%)`;
+  ctx2.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Nebula glow
+  const grad = ctx2.createRadialGradient(
+    canvas.width * 0.6, canvas.height * 0.3, 0,
+    canvas.width * 0.6, canvas.height * 0.3, canvas.width * 0.4
+  );
+  grad.addColorStop(0, `hsla(${hue}, 80%, 20%, 0.08)`);
+  grad.addColorStop(1, 'transparent');
+  ctx2.fillStyle = grad;
+  ctx2.fillRect(0, 0, canvas.width, canvas.height);
+
+  stars.forEach(s => {
+    const twinkle = Math.sin(t * 0.001 * s.speed + s.phase) * 0.3 + 0.7;
+    ctx2.beginPath();
+    ctx2.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx2.fillStyle = `rgba(200, 220, 255, ${s.alpha * twinkle})`;
+    ctx2.fill();
+    s.x += s.drift;
+    if (s.x < 0) s.x = canvas.width;
+    if (s.x > canvas.width) s.x = 0;
+  });
+  requestAnimationFrame(drawStars);
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+requestAnimationFrame(drawStars);
+
+// ═══════════════════════════════════════════
+//  CLOCK
+// ═══════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const timeStr = `${hh}:${mm}`;
+  const dateStr = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  document.getElementById('loginClock').textContent = timeStr;
+  document.getElementById('loginDate').textContent = dateStr;
+  document.getElementById('tbClock').textContent = timeStr;
+}
+updateClock();
+setInterval(updateClock, 5000);
+
+// ═══════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════
+document.getElementById('enterBtn').onclick = () => {
+  const ls = document.getElementById('loginScreen');
+  ls.classList.add('fade-out');
+  setTimeout(() => {
+    ls.style.display = 'none';
+    document.getElementById('desktop').style.display = 'block';
+    showToast('Welcome to SiriusOS ⭐');
+  }, 800);
+};
+
+// ═══════════════════════════════════════════
+//  WINDOW MANAGER
+// ═══════════════════════════════════════════
+let zTop = 10;
+const windows = {}; // id -> { el, minimized, tbBtn }
+
+function createWindow(id, title, icon, width, height, content, x, y) {
+  if (windows[id]) {
+    restoreWindow(id);
+    focusWindow(id);
+    return;
+  }
+
+  const win = document.createElement('div');
+  win.className = 'win';
+  win.id = 'win_' + id;
+  win.style.width = width + 'px';
+  win.style.height = height + 'px';
+  win.style.left = (x || 80 + Object.keys(windows).length * 30) + 'px';
+  win.style.top  = (y || 60 + Object.keys(windows).length * 30) + 'px';
+  win.style.zIndex = ++zTop;
+
+  win.innerHTML = `
+    <div class="win-bar" id="bar_${id}">
+      <div class="win-controls">
+        <div class="win-btn win-close" title="Close"  onclick="closeWindow('${id}')"></div>
+        <div class="win-btn win-min"   title="Minimize" onclick="minimizeWindow('${id}')"></div>
+        <div class="win-btn win-max"   title="Maximize" onclick="toggleMax('${id}')"></div>
+      </div>
+      <span class="win-icon">${icon}</span>
+      <span class="win-title">${title}</span>
+    </div>
+    <div class="win-body">${content}</div>
+  `;
+
+  document.getElementById('desktop').appendChild(win);
+  makeDraggable(win, win.querySelector('.win-bar'));
+
+  // Click to focus
+  win.addEventListener('mousedown', () => focusWindow(id));
+
+  // Taskbar button
+  const tbApps = document.getElementById('tbApps');
+  const btn = document.createElement('div');
+  btn.className = 'tb-btn active';
+  btn.id = 'tb_' + id;
+  btn.innerHTML = `${icon} <span>${title}</span>`;
+  btn.onclick = () => {
+    if (windows[id].minimized) restoreWindow(id);
+    else if (win.classList.contains('focused')) minimizeWindow(id);
+    else focusWindow(id);
+  };
+  tbApps.appendChild(btn);
+
+  windows[id] = { el: win, minimized: false, tbBtn: btn };
+  focusWindow(id);
+}
+
+function focusWindow(id) {
+  Object.keys(windows).forEach(k => windows[k].el.classList.remove('focused'));
+  const w = windows[id];
+  if (!w) return;
+  w.el.classList.add('focused');
+  w.el.style.zIndex = ++zTop;
+  Object.values(windows).forEach(v => v.tbBtn.classList.remove('active'));
+  w.tbBtn.classList.add('active');
+}
+
+function closeWindow(id) {
+  const w = windows[id];
+  if (!w) return;
+  w.el.remove();
+  w.tbBtn.remove();
+  delete windows[id];
+}
+
+function minimizeWindow(id) {
+  const w = windows[id];
+  if (!w) return;
+  w.el.style.display = 'none';
+  w.minimized = true;
+  w.tbBtn.classList.remove('active');
+  w.tbBtn.classList.add('minimized');
+}
+
+function restoreWindow(id) {
+  const w = windows[id];
+  if (!w) return;
+  w.el.style.display = 'flex';
+  w.minimized = false;
+  w.tbBtn.classList.remove('minimized');
+  focusWindow(id);
+}
+
+function toggleMax(id) {
+  const w = windows[id];
+  if (!w) return;
+  if (w.maximized) {
+    Object.assign(w.el.style, w.prevBounds);
+    w.maximized = false;
+  } else {
+    w.prevBounds = { left: w.el.style.left, top: w.el.style.top, width: w.el.style.width, height: w.el.style.height };
+    Object.assign(w.el.style, { left: '0', top: '0', width: '100vw', height: 'calc(100vh - 48px)' });
+    w.maximized = true;
+  }
+}
+
+// ═══════════════════════════════════════════
+//  DRAG
+// ═══════════════════════════════════════════
+function makeDraggable(el, handle) {
+  let ox, oy;
+  handle.addEventListener('mousedown', e => {
+    if (e.target.classList.contains('win-btn')) return;
+    ox = e.clientX - el.offsetLeft;
+    oy = e.clientY - el.offsetTop;
+    const move = ev => {
+      el.style.left = Math.max(0, Math.min(window.innerWidth - el.offsetWidth, ev.clientX - ox)) + 'px';
+      el.style.top  = Math.max(0, Math.min(window.innerHeight - 48 - el.offsetHeight, ev.clientY - oy)) + 'px';
+    };
+    const stop = () => { document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', stop); };
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', stop);
+  });
+}
+
+// ═══════════════════════════════════════════
+//  CONTEXT MENU
+// ═══════════════════════════════════════════
+const ctxMenu = document.getElementById('ctxMenu');
+document.getElementById('desktop').addEventListener('contextmenu', e => {
+  if (e.target.closest('.win') || e.target.closest('#taskbar')) return;
+  e.preventDefault();
+  ctxMenu.style.display = 'block';
+  ctxMenu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+  ctxMenu.style.top  = Math.min(e.clientY, window.innerHeight - 120) + 'px';
+});
+document.addEventListener('click', closeCtx);
+function closeCtx() { ctxMenu.style.display = 'none'; }
+
+// ═══════════════════════════════════════════
+//  TOAST NOTIFICATIONS  (new feature)
+// ═══════════════════════════════════════════
+function showToast(msg, duration = 3000) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), duration);
+}
+
+// ═══════════════════════════════════════════
+//  APPS
+// ═══════════════════════════════════════════
+
+/* ── About ── */
+function buildAbout() {
+  return `<div class="about-wrap">
+    <div class="about-avatar">⭐</div>
+    <div class="about-name">Sirius</div>
+    <div class="about-bio">Hi! I'm a developer who loves building cool things. Hackclub member & Slack bot creator. Always learning.</div>
+    <div class="about-stat">
+      <div class="stat-box"><div class="stat-num">5</div><div class="stat-lbl">Slash Cmds</div></div>
+      <div class="stat-box"><div class="stat-num">24/7</div><div class="stat-lbl">Uptime</div></div>
+      <div class="stat-box"><div class="stat-num">∞</div><div class="stat-lbl">Curiosity</div></div>
+    </div>
+    <div class="about-links">
+      <a class="about-link" href="https://github.com/SiriusW823" target="_blank">GitHub</a>
+      <a class="about-link" href="https://hackclub.com" target="_blank">Hack Club</a>
+    </div>
+  </div>`;
+}
+
+/* ── Terminal ── */
+const CMDS = {
+  help: () => `<p class="info">Commands: help, whoami, date, ls, uname, echo, star, clear</p>`,
+  whoami: () => `<p>sirius</p>`,
+  date: () => `<p>${new Date().toString()}</p>`,
+  uname: () => `<p>SiriusOS v1.0 — built on stardust</p>`,
+  ls: () => `<p>about.txt  stargazer.app  notes.txt  calc.app  README.md</p>`,
+  star: () => `<p>★ ★ ★  The brightest star in the night sky is Sirius  ★ ★ ★</p>`,
+  echo: (args) => `<p>${args.join(' ')}</p>`,
+  clear: () => '__clear__'
+};
+
+function buildTerminal(id) {
+  const termId = `term_${id}`;
+  const outId  = `termOut_${id}`;
+  const inId   = `termIn_${id}`;
+  const history = [];
+  let histIdx = -1;
+
+  setTimeout(() => {
+    const input = document.getElementById(inId);
+    if (!input) return;
+    const output = document.getElementById(outId);
+
+    function print(html) { output.innerHTML += html; output.scrollTop = output.scrollHeight; }
+    print(`<p class="info">SiriusOS Terminal v1.0</p><p class="info">Type "help" for commands.</p><br/>`);
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        const raw = input.value.trim();
+        if (!raw) return;
+        history.unshift(raw); histIdx = -1;
+        print(`<p><span style="color:#1e90ff">sirius@os</span><span style="color:#445577">:~$</span> ${raw}</p>`);
+        const [cmd, ...args] = raw.split(' ');
+        if (CMDS[cmd]) {
+          const res = CMDS[cmd](args);
+          if (res === '__clear__') output.innerHTML = '';
+          else print(res);
+        } else {
+          print(`<p class="err">Command not found: ${cmd}</p>`);
+        }
+        input.value = '';
+      } else if (e.key === 'ArrowUp') {
+        histIdx = Math.min(histIdx + 1, history.length - 1);
+        input.value = history[histIdx] || '';
+      } else if (e.key === 'ArrowDown') {
+        histIdx = Math.max(histIdx - 1, -1);
+        input.value = histIdx === -1 ? '' : history[histIdx];
+      }
+    });
+    input.focus();
+  }, 100);
+
+  return `<div class="term-wrap">
+    <div class="term-output" id="${outId}"></div>
+    <div class="term-input-row">
+      <span class="term-prompt">sirius@os:~$</span>
+      <input class="term-input" id="${inId}" autocomplete="off" spellcheck="false" />
+    </div>
+  </div>`;
+}
+
+/* ── Stargazer (unique app) ── */
+const CONSTELLATIONS = [
+  { name: 'Orion', stars: [[0.3,0.3],[0.5,0.2],[0.7,0.3],[0.4,0.5],[0.6,0.5],[0.35,0.75],[0.65,0.75]], lines: [[0,1],[1,2],[0,3],[2,4],[3,4],[3,5],[4,6]] },
+  { name: 'Ursa Major', stars: [[0.2,0.4],[0.35,0.35],[0.5,0.3],[0.65,0.35],[0.78,0.45],[0.88,0.38],[0.92,0.28]], lines: [[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]] },
+  { name: 'Cassiopeia', stars: [[0.15,0.5],[0.32,0.3],[0.5,0.45],[0.68,0.28],[0.85,0.45]], lines: [[0,1],[1,2],[2,3],[3,4]] },
+];
+let sgConst = 0;
+function buildStargazer(winId) {
+  const cid = `sg_${winId}`;
+  setTimeout(() => {
+    const c = document.getElementById(cid);
+    if (!c) return;
+    const cx = c.getContext('2d');
+    let hovered = -1;
+
+    function draw() {
+      const W = c.width = c.offsetWidth;
+      const H = c.height = c.offsetHeight;
+      cx.clearRect(0,0,W,H);
+      cx.fillStyle = '#020812';
+      cx.fillRect(0,0,W,H);
+
+      // Background stars
+      for (let i = 0; i < 200; i++) {
+        cx.beginPath();
+        const r = Math.random();
+        cx.arc((r * W * 7919) % W, (r * H * 6271) % H, 0.5, 0, Math.PI*2);
+        cx.fillStyle = 'rgba(200,220,255,0.4)';
+        cx.fill();
+      }
+
+      const con = CONSTELLATIONS[sgConst];
+      // Lines
+      cx.strokeStyle = 'rgba(100,160,255,0.35)';
+      cx.lineWidth = 1;
+      con.lines.forEach(([a,b]) => {
+        const sa = con.stars[a], sb = con.stars[b];
+        cx.beginPath();
+        cx.moveTo(sa[0]*W, sa[1]*H);
+        cx.lineTo(sb[0]*W, sb[1]*H);
+        cx.stroke();
+      });
+      // Stars
+      con.stars.forEach((s,i) => {
+        const glow = cx.createRadialGradient(s[0]*W, s[1]*H, 0, s[0]*W, s[1]*H, i === hovered ? 14 : 8);
+        glow.addColorStop(0, 'rgba(255,255,255,0.9)');
+        glow.addColorStop(1, 'transparent');
+        cx.beginPath();
+        cx.arc(s[0]*W, s[1]*H, i === hovered ? 5 : 3, 0, Math.PI*2);
+        cx.fillStyle = glow;
+        cx.fill();
+      });
+    }
+
+    c.addEventListener('mousemove', e => {
+      const rect = c.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) / rect.width;
+      const my = (e.clientY - rect.top)  / rect.height;
+      hovered = CONSTELLATIONS[sgConst].stars.findIndex(s => Math.hypot(s[0]-mx, s[1]-my) < 0.06);
+      draw();
+    });
+
+    draw();
+    c.addEventListener('click', () => {
+      sgConst = (sgConst + 1) % CONSTELLATIONS.length;
+      showToast(`Constellation: ${CONSTELLATIONS[sgConst].name}`);
+      draw();
+    });
+  }, 100);
+
+  return `<div style="position:relative;width:100%;height:100%">
+    <canvas id="${cid}" style="width:100%;height:100%;display:block;cursor:crosshair"></canvas>
+    <div class="constellation-info">Click to switch constellation · Hover stars to highlight</div>
+  </div>`;
+}
+
+/* ── Notes ── */
+let notesData = [{ title: 'Welcome', body: 'Your first note in SiriusOS!\n\nClick "+" to add more notes.' }];
+let activeNote = 0;
+function buildNotes(winId) {
+  const sid = `notesSide_${winId}`, tid = `notesTitle_${winId}`, bid = `notesBody_${winId}`;
+  setTimeout(() => {
+    renderNotesList(sid, tid, bid);
+  }, 50);
+  return `<div class="notes-wrap">
+    <div class="notes-sidebar" id="${sid}"></div>
+    <div class="notes-editor">
+      <input class="note-title-input" id="${tid}" placeholder="Title" />
+      <textarea class="note-body-input" id="${bid}" placeholder="Start writing..."></textarea>
+    </div>
+  </div>`;
+}
+function renderNotesList(sid, tid, bid) {
+  const sidebar = document.getElementById(sid);
+  if (!sidebar) return;
+  sidebar.innerHTML = `<button class="notes-new-btn" onclick="newNote('${sid}','${tid}','${bid}')">+ New Note</button>`;
+  notesData.forEach((n, i) => {
+    const item = document.createElement('div');
+    item.className = 'note-item' + (i === activeNote ? ' active' : '');
+    item.textContent = n.title || 'Untitled';
+    item.onclick = () => { activeNote = i; loadNote(tid, bid); renderNotesList(sid, tid, bid); };
+    sidebar.appendChild(item);
+  });
+  loadNote(tid, bid);
+  document.getElementById(tid).oninput = () => { notesData[activeNote].title = document.getElementById(tid).value; renderNotesList(sid, tid, bid); };
+  document.getElementById(bid).oninput = () => { notesData[activeNote].body = document.getElementById(bid).value; };
+}
+function loadNote(tid, bid) {
+  const n = notesData[activeNote];
+  document.getElementById(tid).value = n.title;
+  document.getElementById(bid).value = n.body;
+}
+function newNote(sid, tid, bid) {
+  notesData.push({ title: 'New Note', body: '' });
+  activeNote = notesData.length - 1;
+  renderNotesList(sid, tid, bid);
+  document.getElementById(tid).focus();
+}
+
+/* ── Calculator ── */
+let calcExpr = '', calcVal = '0';
+function buildCalc() {
+  return `<div class="calc-wrap">
+    <div class="calc-display">
+      <div class="calc-expr" id="cExpr"></div>
+      <div class="calc-val" id="cVal">0</div>
+    </div>
+    <div class="calc-grid">
+      ${[['C','±','%','÷'],['7','8','9','×'],['4','5','6','−'],['1','2','3','+'],['0','.',null,'=']].map(row =>
+        row.map(k => k === null ? `<div></div>` :
+          `<button class="calc-btn${['÷','×','−','+'].includes(k)?' op':k==='='?' eq':k==='0'?' wide':''}" onclick="calcPress('${k}')">${k}</button>`
+        ).join('')
+      ).join('')}
+    </div>
+  </div>`;
+}
+function calcPress(k) {
+  const ve = document.getElementById('cVal'), xe = document.getElementById('cExpr');
+  if (!ve) return;
+  if (k === 'C') { calcExpr = ''; calcVal = '0'; }
+  else if (k === '=') {
+    try {
+      const expr = calcExpr.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-');
+      xe.textContent = calcExpr + '=';
+      calcVal = String(eval(expr));
+      calcExpr = calcVal;
+    } catch { calcVal = 'Err'; }
+  } else if (k === '±') { calcVal = String(parseFloat(calcVal || '0') * -1); calcExpr = calcVal; }
+  else if (k === '%') { calcVal = String(parseFloat(calcVal || '0') / 100); calcExpr = calcVal; }
+  else { calcExpr += k; calcVal = calcExpr; }
+  ve.textContent = calcVal;
+  if (xe && k !== '=') xe.textContent = calcExpr;
+}
+
+/* ── Open App dispatcher ── */
+function openApp(name) {
+  const apps = {
+    about:     { title: 'About',     icon: '👤', w: 340, h: 400 },
+    terminal:  { title: 'Terminal',  icon: '💻', w: 500, h: 340 },
+    stargazer: { title: 'Stargazer', icon: '🔭', w: 480, h: 360 },
+    notes:     { title: 'Notes',     icon: '📝', w: 480, h: 360 },
+    calc:      { title: 'Calculator',icon: '🔢', w: 280, h: 380 },
+  };
+  const a = apps[name];
+  if (!a) return;
+  const id = name + '_' + Date.now();
+  let content;
+  switch (name) {
+    case 'about':     content = buildAbout(); break;
+    case 'terminal':  content = buildTerminal(id); break;
+    case 'stargazer': content = buildStargazer(id); break;
+    case 'notes':     content = buildNotes(id); break;
+    case 'calc':      content = buildCalc(); break;
+  }
+  const offset = Object.keys(windows).length;
+  createWindow(id, a.title, a.icon, a.w, a.h, content,
+    100 + offset * 28, 60 + offset * 28);
+}
+</script>
+</body>
+</html>
