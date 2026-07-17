@@ -1,44 +1,36 @@
 # SiriusOS
 
-SiriusOS is a space-themed web-based operating system that runs entirely within the browser. It requires no installation and no external dependencies, and is contained within a single HTML file.
+A space-themed desktop that runs entirely in the browser. There's nothing to install and no dependencies to manage — the whole thing lives in a single HTML file.
 
 ![SiriusOS](https://img.shields.io/badge/platform-browser-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## Live Demo
 
-The application is available online at [https://siriusw823.github.io/sirius-webos/](https://siriusw823.github.io/sirius-webos/).
+You can try it here: [siriusw823.github.io/sirius-webos](https://siriusw823.github.io/sirius-webos/)
 
 ## Features
 
-### Desktop Environment
+**Desktop environment.** An animated starfield with nebula glow sits behind everything, along with a lock screen that shows a live clock and date, a right-click context menu, and a taskbar for launching apps and switching between minimized windows.
 
-The desktop environment provides an animated starfield background with nebula glow effects, a lock screen with a live clock and date display, a right-click context menu, and a taskbar that includes an application launcher and buttons for minimized windows.
+**Window manager.** Drag windows around by their title bar, and minimize, maximize, or close them as needed. Clicking a window brings it to the front. It's all built on native JavaScript `mousedown` and `mousemove` events, with no libraries involved.
 
-### Window Manager
+**Built-in apps:**
 
-Windows can be repositioned by dragging their title bar and controlled through minimize, maximize, and close actions. Window focus is managed through z-index ordering, allowing a window to be brought to the front by clicking it. The window manager is implemented entirely with native JavaScript `mousedown` and `mousemove` events, without the use of external libraries.
+- **About** — system information and links
+- **Terminal** — a command-line interface with history you can scroll through using the up and down arrow keys
+- **Stargazer** — an interactive constellation viewer
+- **Notes** — a tabbed note-taking app
+- **Calculator** — a basic calculator
 
-### Built-in Applications
+Rounding things out, there are toast notifications and a Pomodoro timer tucked into the taskbar.
 
-| Application | Description |
-|-------------|-------------|
-| About | Displays system information and related links. |
-| Terminal | A command-line interface with command history navigable using the up and down arrow keys. |
-| Stargazer | An interactive constellation viewer. |
-| Notes | A tabbed note-taking application. |
-| Calculator | A basic calculator. |
+## Tech Stack
 
-### Additional Features
-
-The system also includes toast notifications and a Pomodoro timer located in the taskbar.
-
-## Technology Stack
-
-SiriusOS is built with pure HTML, CSS, and JavaScript in a single file, with no external dependencies. The Canvas API is used for rendering the starfield and the Stargazer application, and native DOM events handle drag-and-drop window management.
+Pure HTML, CSS, and JavaScript, all in one file with no external dependencies. The Canvas API handles the starfield and Stargazer rendering, and native DOM events take care of drag-and-drop window management.
 
 ## Getting Started
 
-No build step is required. Open `index.html` in any modern browser to run the application.
+No build step required — just open `index.html` in any modern browser.
 
 ```bash
 git clone https://github.com/SiriusW823/sirius-webos.git
@@ -50,9 +42,9 @@ open index.html   # or double-click the file
 
 ```
 sirius-webos/
-└── index.html    # The complete application
+└── index.html    # everything lives here
 ```
 
-## Attribution
+## Built For
 
-This project was developed for the [Hack Club Stardance Challenge](https://stardance.hackclub.com) as part of the WebOS 1 Mission.
+The [Hack Club Stardance Challenge](https://stardance.hackclub.com) — WebOS 1 Mission.
